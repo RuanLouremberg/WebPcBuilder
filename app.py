@@ -43,7 +43,9 @@ TABELAS = {
     'gpu':            'gpus',
     'memoria':        'memorias',
     'armazenamento':  'armazenamentos',
+    'refrigeracao':   'refrigeracao',
     'fonte':          'fontes',
+    'gabinete':       'gabinetes'
 }
 
 @app.route('/api/componentes/<tipo>')
@@ -67,7 +69,7 @@ def get_componentes(tipo):
 def analisar():
     """
     RF002, RF003, RF004 – Analisa a compatibilidade do setup.
-    Recebe: { processador_id, placa_mae_id, gpu_id, memoria_id, armazenamento_id, fonte_id }
+    Recebe: { processador_id, placa_mae_id, gpu_id, memoria_id, armazenamento_id, refrigeracao_id, fonte_id, gabinete_id }
     Retorna: relatório completo com alertas, score e recomendações.
     """
     dados = request.get_json(silent=True) or {}
@@ -86,7 +88,9 @@ def analisar():
     gpu   = buscar('gpus',          dados.get('gpu_id'))
     ram   = buscar('memorias',      dados.get('memoria_id'))
     disco = buscar('armazenamentos',dados.get('armazenamento_id'))
+    refrigeracao = buscar('refrigeracao', dados.get('refrigeracao_id'))
     fonte = buscar('fontes',        dados.get('fonte_id'))
+    gabinete = buscar('gabinetes',dados.get('gabinete_id'))
 
     # ── Análise de compatibilidade ───────────────────────────────
     alertas = []
@@ -137,7 +141,7 @@ def analisar():
                 'perda_percentual': 100,
             })
 
-    # ── Compatibilidade de RAM (tipo DDR) ────────────────────────
+    # ── Compatibilidade de RAM (tipo DDR) ────────
     if mobo and ram:
         ddr_mobo = mobo.get('ddr_suporte', '').upper()
         ddr_ram  = ram.get('tipo', '').upper()
@@ -155,13 +159,13 @@ def analisar():
                 'perda_percentual': 100,
             })
 
-    # ── Verificar Fonte (consumo estimado) ───────────────────────
-    consumo_total = 0
+    # Verificar Fonte (consumo estimado) 
+    consumo_total = 50 #consumo de energia base
     if cpu:
         consumo_total += int(cpu.get('tdp_watts', 0))
     if gpu:
         consumo_total += int(gpu.get('tdp_watts', 0))
-    consumo_total += 50  # sistema base
+    
 
     if fonte:
         watts_fonte = int(fonte.get('watts', 0))
@@ -187,14 +191,50 @@ def analisar():
                     f'A fonte tem {watts_fonte}W e o consumo estimado é ~{consumo_total}W. '
                     'Recomenda-se uma margem de 20% acima do consumo total para estabilidade.'
                 ),
-                'perda_percentual': 0,
+                'perda_percentual': 20,
             })
+    
+    # ── Verificar Tamanho do gabinete para Air Cooler ─────────────────────────────
+    if refrigeracao.get('tipo', 0) == 'AirCooler':
+        tam_cooler = int(refrigeracao.get('altura', 0))
+        max_gabinete = int(gabinete.get('max_cooler', 0))
+        if tam_cooler > max_gabinete:
+            score -= 80
+            alertas.append({
+                'nivel':    'critico',
+                'codigo':   'ALTURA_COOLER',
+                'titulo':   'Tamanho do gabinete Insuficiente',
+                'descricao': (
+                    f'''O Air Cooler tem {tam_cooler}mm de altura, e o gabinete suporta
+                    apenas {max_gabinete}mm'''
+                ),
+                'perda_percentual': 80
+            })
+     # ── Verificar Tamanho do gabinete para Water Cooler ─────────────────────────────
+
+    elif refrigeracao.get('tipo', 0) == 'WaterCooler':
+        max_wc = refrigeracao.get('wc_fans', 0)
+        max_gab = gabinete.get('max_wc', 0)
+        if max_wc > max_gab:
+            score -= 80
+            alertas.append({
+                'nivel':    'critico',
+                'codigo':   'TAMANHO_WC',
+                'titulo':   'Tamanho do gabinete insuficiente',
+                'descricao':    (
+                    f'''O Water cooler selecionado tem {max_wc}mm, e o gabinete selecionado suporta
+                    apenas {max_gab}mm.'''
+                    ),
+                    'perda percentual': 80
+            })
+
+
 
     # ── Garantir score entre 0 e 100 ─────────────────────────────
     score = max(0, min(100, score))
 
     # ── Gerar recomendações ──────────────────────────────────────
-    recomendacoes = _gerar_recomendacoes(alertas, cpu, mobo, gpu, fonte, consumo_total)
+    recomendacoes = _gerar_recomendacoes(alertas, cpu, mobo, gpu, fonte, refrigeracao, gabinete, consumo_total)
 
     # ── Montar relatório final ────────────────────────────────────
     relatorio = {
@@ -205,7 +245,9 @@ def analisar():
             'gpu':            gpu,
             'memoria':        ram,
             'armazenamento':  disco,
+            'refrigeracao':   refrigeracao,
             'fonte':          fonte,
+            'gabinete':       gabinete,
         },
         'alertas':              alertas,
         'score_performance':    score,
@@ -265,7 +307,7 @@ def get_relatorio(rid):
 # LÓGICA DE RECOMENDAÇÕES
 # ─────────────────────────────────────────
 
-def _gerar_recomendacoes(alertas, cpu, mobo, gpu, fonte, consumo):
+def _gerar_recomendacoes(alertas, cpu, mobo, gpu, fonte, refrigeracao, gabinete, consumo):
     """Gera recomendações textuais baseadas nos alertas detectados."""
     recs = []
     codigos = {a['codigo'] for a in alertas}
@@ -294,6 +336,15 @@ def _gerar_recomendacoes(alertas, cpu, mobo, gpu, fonte, consumo):
     if 'FONTE_MARGEM' in codigos:
         recs.append(
             'Considere uma fonte com maior capacidade para garantir estabilidade e longevidade dos componentes.'
+        )
+    
+    if 'ALTURA_COOLER' in codigos:
+        recs.append(
+            f'Considere um gabinete com maior altura máxima de torre de air cooler. Ou considere um air cooler com torre menor.'
+        )
+    if 'TAMANHO_WC' in codigos:
+        recs.append(
+            f'Considere um gabinete com capacidade para water cooler de 360mm. Ou considere um water cooler menor.'
         )
 
     if not alertas:

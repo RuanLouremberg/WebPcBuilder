@@ -75,6 +75,18 @@ CREATE TABLE IF NOT EXISTS armazenamentos (
     preco       REAL
 );
 
+-- Refrigeração
+CREATE TABLE IF NOT EXISTS refrigeracao (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome        TEXT    NOT NULL,
+    marca       TEXT    NOT NULL,
+    tipo        TEXT    NOT NULL,  -- Water Cooler ou Air Cooler
+    tdp         INTEGER,
+    altura      INTEGER,           -- mm
+    wc_fans     INTEGER,           -- caso seja WC, tamanho de fans em mm
+    preco       REAL
+);
+
 -- Fontes de Alimentação
 CREATE TABLE IF NOT EXISTS fontes (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -85,6 +97,20 @@ CREATE TABLE IF NOT EXISTS fontes (
     modular     TEXT    NOT NULL,  -- Não, Semi, Full
     preco       REAL
 );
+
+-- Gabinetes
+CREATE TABLE IF NOT EXISTS gabinetes (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome                TEXT NOT NULL,
+    marca               TEXT NOT NULL,
+    tipo                TEXT NOT NULL,
+    mobo_form_factor    TEXT NOT NULL,
+    max_cooler          INTEGER NOT NULL,
+    max_gpu             INTEGER NOT NULL,
+    max_wc              INTEGER NOT NULL,
+    preco               REAL
+);
+
 
 -- Relatórios Gerados (RF004)
 CREATE TABLE IF NOT EXISTS relatorios (
@@ -147,7 +173,7 @@ MEMORIAS = [
     ('Corsair Vengeance LPX 32GB DDR4-3200','Corsair', 'DDR4', 32, 3200, 520.0),
     ('G.Skill Trident Z5 16GB DDR5-5600',  'G.Skill',  'DDR5', 16, 5600, 480.0),
     ('Kingston FURY Renegade 32GB DDR5-6000','Kingston','DDR5', 32, 6000, 950.0),
-    ('Corsair Dominator Platinum 64GB DDR5','Corsair',  'DDR5', 64, 5600, 1800.0),
+    ('Corsair Dominator Platinum 64GB DDR5','Corsair', 'DDR5', 64, 5600, 1800.0),
     ('Team T-Force Vulcan 16GB DDR4-3600', 'Team',     'DDR4', 16, 3600, 320.0),
     ('HyperX Fury 8GB DDR4-2666',          'HyperX',   'DDR4',  8, 2666, 150.0),
 ]
@@ -162,6 +188,14 @@ ARMAZENAMENTOS = [
     ('WD Blue 4TB HDD',            'WD',       'HDD',       4000, 175,  380.0),
 ]
 
+REFRIGERACAO = [
+    # (nome, marca, tipo, tdp, altura, wc_fans, preco)
+    ( 'GamerStorm X Redragon AK400', 'Redragon', 'AirCooler', 180, 155, 120, 180),
+    ( 'WC Gamer Rise Mode' , 'Rise Mode' , 'WaterCooler', 220, 0, 240 , 230 ),
+    ( 'WC Pichau Aqua 360X', 'Pichau', 'WaterCooler', 310, 0, 360, 255,)
+
+]
+
 FONTES = [
     # (nome, marca, watts, certificacao, modular, preco)
     ('Corsair CV550 550W',          'Corsair',  550,  '80+ Bronze', 'Não',   280.0),
@@ -171,6 +205,13 @@ FONTES = [
     ('be quiet! Straight Power 850W','be quiet',850,  '80+ Platinum','Full',  980.0),
     ('EVGA SuperNOVA 1000 G6 1000W','EVGA',    1000,  '80+ Gold',   'Full', 1300.0),
     ('Cooler Master MWE 650W',      'Cooler Master',650,'80+ Bronze','Semi',  480.0),
+]
+
+GABINETES = [
+    # (nome, marca, tipo, mobo_form_factor, max_cooler, max_gpu, max_wc preco)
+    ('Rise Mode Wave','Rise Mode', 'Mid Tower', 'ATX', 157, 320, 240 , 185),
+    ('Wideload Lite', 'Redragon', 'Aquario', 'ATX', 175, 395, 360 ,290),
+
 ]
 
 
@@ -219,6 +260,13 @@ def criar_banco():
             ARMAZENAMENTOS
         )
         print(f'  ✔ {len(ARMAZENAMENTOS)} armazenamentos inseridos.')
+    
+    if cur.execute('SELECT COUNT(*) FROM refrigeracao').fetchone()[0] == 0:
+        cur.executemany(
+            'INSERT INTO refrigeracao (nome, marca, tipo, tdp, altura, wc_fans, preco) VALUES (?,?,?,?,?,?,?)',
+            REFRIGERACAO
+        )
+        print(f'✔ {len(REFRIGERACAO)} refrigeracao inseridos.')
 
     if cur.execute('SELECT COUNT(*) FROM fontes').fetchone()[0] == 0:
         cur.executemany(
@@ -226,6 +274,14 @@ def criar_banco():
             FONTES
         )
         print(f'  ✔ {len(FONTES)} fontes inseridas.')
+
+    if cur.execute('SELECT COUNT(*) FROM gabinetes').fetchone()[0] == 0:
+        cur.executemany(
+            'INSERT INTO gabinetes (nome, marca, tipo, mobo_form_factor, max_cooler, max_gpu, max_wc, preco) VALUES (?,?,?,?,?,?,?,?)',
+            GABINETES
+        )
+        print(f'  ✔ {len(GABINETES)} gabinetes inseridos.')
+    
 
     conn.commit()
     conn.close()
