@@ -12,9 +12,9 @@ from datetime import datetime
 app = Flask(__name__)
 DB_PATH = 'pc_builder.db'
 
-# ─────────────────────────────────────────
+# ----------
 # CONEXÃO COM BANCO DE DADOS
-# ─────────────────────────────────────────
+# ----------
 
 def get_db():
     """Retorna conexão com o banco SQLite."""
@@ -23,9 +23,9 @@ def get_db():
     return conn
 
 
-# ─────────────────────────────────────────
+# ----------
 # ROTAS DE INTERFACE
-# ─────────────────────────────────────────
+# ----------
 
 @app.route('/')
 def index():
@@ -33,9 +33,9 @@ def index():
     return render_template('index.html')
 
 
-# ─────────────────────────────────────────
+# ----------
 # API: LISTAR COMPONENTES
-# ─────────────────────────────────────────
+# ----------
 
 TABELAS = {
     'processador':    'processadores',
@@ -61,9 +61,9 @@ def get_componentes(tipo):
     return jsonify([dict(r) for r in rows])
 
 
-# ─────────────────────────────────────────
-# API: ANALISAR COMPATIBILIDADE
-# ─────────────────────────────────────────
+
+# APi: ANALISAR COMPATIBILIDADE
+
 
 @app.route('/api/analisar', methods=['POST'])
 def analisar():
@@ -76,7 +76,7 @@ def analisar():
 
     conn = get_db()
 
-    # ── Buscar componentes selecionados ──────────────────────────
+    # ---------- Buscar componentes selecionados ----------
     def buscar(tabela, cid):
         if not cid:
             return None
@@ -92,11 +92,11 @@ def analisar():
     fonte = buscar('fontes',        dados.get('fonte_id'))
     gabinete = buscar('gabinetes',dados.get('gabinete_id'))
 
-    # ── Análise de compatibilidade ───────────────────────────────
+    # ---------- Análise de compatibilidade ----------
     alertas = []
     score   = 100  # pontuação de performance (0–100)
 
-    # ── RN001 / RN002: PCIe entre Placa-mãe e GPU ───────────────
+    # ---------- RN001 / RN002: PCIe entre Placa-mãe e GPU ----------
     if mobo and gpu:
         pcie_mobo = int(mobo.get('pcie_versao', 3))
         pcie_gpu  = int(gpu.get('pcie_versao',  4))
@@ -123,7 +123,7 @@ def analisar():
                 'perda_percentual': perda_bw,
             })
 
-    # ── Compatibilidade de Socket (CPU + Mobo) ───────────────────
+    # ---------- Compatibilidade de Socket (CPU + Mobo) ----------
     if cpu and mobo:
         socket_cpu  = cpu.get('socket', '').strip().upper()
         socket_mobo = mobo.get('socket', '').strip().upper()
@@ -141,7 +141,7 @@ def analisar():
                 'perda_percentual': 100,
             })
 
-    # ── Compatibilidade de RAM (tipo DDR) ────────
+    # ---------- Compatibilidade de RAM (tipo DDR) ----------
     if mobo and ram:
         ddr_mobo = mobo.get('ddr_suporte', '').upper()
         ddr_ram  = ram.get('tipo', '').upper()
@@ -159,7 +159,7 @@ def analisar():
                 'perda_percentual': 100,
             })
 
-    # Verificar Fonte (consumo estimado) 
+    # ---- Verificar Fonte (consumo estimado)-----------------
     consumo_total = 50 #consumo de energia base
     if cpu:
         consumo_total += int(cpu.get('tdp_watts', 0))
@@ -194,7 +194,7 @@ def analisar():
                 'perda_percentual': 20,
             })
     
-    # ── Verificar Tamanho do gabinete para Air Cooler ─────────────────────────────
+    # ---------- Verificar Tamanho do gabinete para Air Cooler ----------
     if refrigeracao.get('tipo', 0) == 'AirCooler':
         tam_cooler = int(refrigeracao.get('altura', 0))
         max_gabinete = int(gabinete.get('max_cooler', 0))
@@ -210,7 +210,7 @@ def analisar():
                 ),
                 'perda_percentual': 80
             })
-     # ── Verificar Tamanho do gabinete para Water Cooler ─────────────────────────────
+     # ---------- Verificar Tamanho do gabinete para Water Cooler ----------
 
     elif refrigeracao.get('tipo', 0) == 'WaterCooler':
         max_wc = refrigeracao.get('wc_fans', 0)
@@ -230,13 +230,13 @@ def analisar():
 
 
 
-    # ── Garantir score entre 0 e 100 ─────────────────────────────
+    # ---------- Garantir score entre 0 e 100 ----------
     score = max(0, min(100, score))
 
-    # ── Gerar recomendações ──────────────────────────────────────
+    # ---------- Gerar recomendações ----------
     recomendacoes = _gerar_recomendacoes(alertas, cpu, mobo, gpu, fonte, refrigeracao, gabinete, consumo_total)
 
-    # ── Montar relatório final ────────────────────────────────────
+    # ---------- Montar relatório final ----------
     relatorio = {
         'timestamp':        datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
         'componentes': {
@@ -255,7 +255,7 @@ def analisar():
         'recomendacoes':        recomendacoes,
     }
 
-    # ── Persistir no banco (RF004) ────────────────────────────────
+    # ---------- Persistir no banco (RF004) ----------
     cur = conn.execute(
         'INSERT INTO relatorios (dados_json, criado_em) VALUES (?, ?)',
         (json.dumps(relatorio, ensure_ascii=False), datetime.now().isoformat())
@@ -267,9 +267,9 @@ def analisar():
     return jsonify(relatorio)
 
 
-# ─────────────────────────────────────────
+
 # API: HISTÓRICO DE RELATÓRIOS
-# ─────────────────────────────────────────
+
 
 @app.route('/api/relatorios')
 def listar_relatorios():
@@ -303,9 +303,9 @@ def get_relatorio(rid):
     return jsonify(json.loads(row['dados_json']))
 
 
-# ─────────────────────────────────────────
+
 # LÓGICA DE RECOMENDAÇÕES
-# ─────────────────────────────────────────
+
 
 def _gerar_recomendacoes(alertas, cpu, mobo, gpu, fonte, refrigeracao, gabinete, consumo):
     """Gera recomendações textuais baseadas nos alertas detectados."""
@@ -353,9 +353,9 @@ def _gerar_recomendacoes(alertas, cpu, mobo, gpu, fonte, refrigeracao, gabinete,
     return recs
 
 
-# ─────────────────────────────────────────
+
 # INICIALIZAÇÃO
-# ─────────────────────────────────────────
+
 
 if __name__ == '__main__':
     print("🖥️  PC Builder rodando em http://localhost:5000")

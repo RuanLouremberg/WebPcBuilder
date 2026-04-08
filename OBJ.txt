@@ -1,1 +1,12 @@
-- Sistema atualizado para receber também: GABINETE, AIR COOLER/WATER COOLER: e identificar problemas relacionados.
+- Atualizar o sistema para receber também: GABINETE, AIR COOLER/WATER COOLER ## FINALIZADO
+
+- identificar possíveis incompatibilidades relacionadas a esses componentes.
+
+- atualizar o sistema para identificar o atx da fonte e Alimentação pcie da fonte
+( se será necessária a utilização de um adaptador ou a Alimentação
+da fonte é suficiente para a placa de vídeo.)
+
+- atualizar o  sistema para receber fontes, placa mãe e placas de vídeo com pcie 5.0
+e ssd para a geração: gen 3, 3x4, 4x4, 5x5, tendo como referência a entrada nvme da placa mãe.
+
+- OBJETIVO SECUNDÁRIO: atualizar o css para melhor visual.
