@@ -4,12 +4,15 @@ Backend Flask com SQLite
 Laboratório de Software
 """
 
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, session, redirect, url_for
 import sqlite3
+import sqlite3 as sql
 import json
 from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = 'adm123'
+
 DB_PATH = 'pc_builder.db'
 
 # ----------
@@ -60,7 +63,139 @@ def get_componentes(tipo):
     conn.close()
     return jsonify([dict(r) for r in rows])
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    req = request.form
+    if request.method == 'POST':
+        nome = req.get('nome')
+        email = req.get('email')
+        senha = req.get('senha')
+        
+        con = sql.connect('pc_builder.db')
+        con.row_factory = sql.Row
+        cur = con.cursor()
+        cur.execute('SELECT * FROM usuarios WHERE email = ? AND senha = ?',
+                    (email,senha))
+        user = cur.fetchone()
+        con.close()
 
+        if user:
+            session['user_id'] = user['id']
+            session['user_name'] = user['nome']
+            session['is_admin'] = bool(user['is_admin'])
+
+            if session['is_admin']:
+                return redirect(url_for('cadastrar'))
+            else:
+                return redirect(url_for('index'))
+        return "E-mail ou senha incorretos!", 401
+    return render_template('login.html')
+
+
+
+# -- Cadastro de peças ----------------
+@app.route('/cadastro_peca', methods = ['POST', 'GET'])
+def cadastrar():
+    req = request.form
+    if not session.get('is_admin'):
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        req = request.form
+        categoria = req.get('categoria')
+
+        # características base
+        nome = req.get('nome')
+        marca = req.get('marca')
+        preco = req.get('preco')
+
+
+        # conexão com banco de dados
+        con = sql.connect('pc_builder.db')
+        cur = con.cursor()
+
+        # características específicas da peça
+        if categoria == 'processadores':
+            socket = req.get('socket')
+            nucleos = req.get('nucleos')
+            threads = req.get('threads')
+            freq_base = req.get('freq_base'),
+            freq_boost = req.get('freq_boost')
+            pcie_versao = req.get('pcie_versao')
+            td_watts = req.get('td_watts')
+
+            cur.execute('INSERT INTO processadores VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                    (None,nome,marca,socket,nucleos,threads,freq_base,freq_boost,pcie_versao,td_watts,preco))
+            
+            
+        elif categoria == 'placas_mae':
+            socket_mae = req.get('socket_mae')
+            chipset = req.get('chipset')
+            ddr_suporte = req.get('ddr_suporte')
+
+            cur.execute('INSERT INTO placas_mae VALUES (?,?,?,?,?,?,?)',
+                        (None,nome,marca,socket_mae,chipset,ddr_suporte,preco))
+            
+        
+        elif categoria == 'gpus':
+            chip = req.get('chip')
+            vram_gb = req.get('vram_gb')
+            tdp_gpu = req.get('tdp_gpu')
+
+            cur.execute('INSERT INTO gpus VALUES (?,?,?,?,?,?,?)',
+                        (None,nome,marca,chip,vram_gb,tdp_gpu,preco))
+            
+            
+        elif categoria == 'memorias':
+            tipo_ram = req.get('tipo_ram')
+            capacidade_ram = req.get('capacidade_ram')
+            velocidade_ram = req.get('velocidade_ram')
+
+            cur.execute('INSERT INTO memorias VALUES (?,?,?,?,?,?,?)',
+                        (None,nome,marca,tipo_ram,capacidade_ram,velocidade_ram,preco))
+            
+            
+        elif categoria == 'armazenamentos':
+            tipo_disco = req.get('tipo_disco')
+            capacidade_disco = req.get('capacidade_disco')
+            velocidade_disco = req.get('velocidade_disco')
+
+            cur.execute('INSERT INTO armazenamentos VALUES (?,?,?,?,?,?,?)',
+                        (None,nome,marca,tipo_disco,capacidade_disco,velocidade_disco,preco))
+            
+            
+        elif categoria == 'refrigeracao':
+            tipo_cooler = req.get('tipo_cooler')
+            tdp_cooler = req.get('tdp_cooler')
+            altura_cooler = req.get('altura_cooler')
+            wc_fans = req.get('wc_fans')
+
+            cur.execute('INSERT INTO refrigeracao VALUES (?,?,?,?,?,?,?,?)',
+                        (None,nome,marca,tipo_cooler,tdp_cooler,altura_cooler,wc_fans,preco))
+            
+            
+        elif categoria == 'fontes':
+            watts = req.get('watts')
+            certificacao = req.get('certificacao')
+            modular = req.get('modular')
+
+            cur.execute('INSERT INTO fontes VALUES (?,?,?,?,?,?,?)',
+                        (None,nome,marca,watts,certificacao,modular,preco))
+            
+            
+        elif categoria == 'gabinetes':
+            tipo_gabinete = req.get('tipo_gabinete')
+            mobo_suporte = req.get('mobo_suporte')
+            max_gpu = req.get('max_gpu')
+            max_wc = req.get('max_wc')
+
+            cur.execute('INSERT INTO gabinetes VALUES (?,?,?,?,?,?,?,?)',
+                        (None,nome,marca,tipo_gabinete,mobo_suporte,max_gpu,max_wc,preco))
+        con.commit()    
+        con.close()
+
+        return redirect(url_for('cadastrar'))
+    return render_template('cadastro_peca.html')
 
 # APi: ANALISAR COMPATIBILIDADE
 

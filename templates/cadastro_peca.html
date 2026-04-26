@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Cadastro - PC Builder</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; color: #1c1e21; }
+        .container { max-width: 700px; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); margin: auto; }
+        h2 { text-align: center; color: #007bff; margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; background-color: #fff; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .secao-especifica { display: none; padding: 20px; border: 2px solid #e7f3ff; border-radius: 8px; background: #f8fbff; margin: 15px 0; }
+        button { width: 100%; padding: 14px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: 0.2s; }
+        button:hover { background: #0056b3; }
+        .badge { display: inline-block; padding: 4px 8px; background: #e7f3ff; color: #007bff; border-radius: 4px; font-size: 12px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Cadastrar Novo Componente</h2>
+    <form action="/cadastro_peca" method="POST">
+        
+        <div class="form-group">
+            <label>Tipo de Peça:</label>
+            <select name="categoria" id="categoria" onchange="mostrarCampos()" required>
+                <option value="">Selecione o que deseja cadastrar...</option>
+                <option value="processadores">Processador</option>
+                <option value="placas_mae">Placa-mãe</option>
+                <option value="gpus">Placa de Vídeo (GPU)</option>
+                <option value="memorias">Memória RAM</option>
+                <option value="armazenamentos">Armazenamento (SSD/HDD)</option>
+                <option value="refrigeracao">Refrigeração (Air/Water)</option>
+                <option value="fontes">Fonte de Alimentação</option>
+                <option value="gabinetes">Gabinete</option>
+            </select>
+        </div>
+
+        <div class="grid">
+            <div class="form-group">
+                <label>Nome do Produto:</label>
+                <input type="text" name="nome" placeholder="Ex: RTX 4070" required>
+            </div>
+            <div class="form-group">
+                <label>Marca:</label>
+                <input type="text" name="marca" placeholder="Ex: ASUS" required>
+            </div>
+        </div>
+
+        <div id="campos_processadores" class="secao-especifica">
+            <span class="badge">Especificações de CPU</span>
+            <div class="grid">
+                <input type="text" name="socket" placeholder="Socket (Ex: AM5)">
+                <input type="number" name="nucleos" placeholder="Núcleos">
+                <input type="number" name="threads" placeholder="Threads">
+                <input type="number" step="0.1" name="freq_base" placeholder="Frequência Base (GHz)">
+                <input type="number" step="0.1" name="freq_boost" placeholder="Frequência Boost (GHz)">
+                <select name="pcie_versao">
+                    <option value="">PCIe Versão</option>
+                    <option value="3">3.0</option>
+                    <option value="4">4.0</option>
+                    <option value="5">5.0</option>
+                </select>
+                <input type="number" name="tdp_watts" placeholder="TDP (Watts)">
+            </div>
+        </div>
+
+        <div id="campos_placas_mae" class="secao-especifica">
+            <span class="badge">Especificações de Mobo</span>
+            <div class="grid">
+                <input type="text" name="socket_mae" placeholder="Socket">
+                <input type="text" name="chipset" placeholder="Chipset">
+                <select name="ddr_suporte">
+                    <option value="DDR4">DDR4</option>
+                    <option value="DDR5">DDR5</option>
+                </select>
+                <select name="form_factor">
+                    <option value="ATX">ATX</option>
+                    <option value="mATX">mATX</option>
+                    <option value="ITX">ITX</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="campos_gpus" class="secao-especifica">
+            <span class="badge">Especificações de Vídeo</span>
+            <div class="grid">
+                <input type="text" name="chip" placeholder="Chip (Ex: Navi31)">
+                <input type="number" name="vram_gb" placeholder="VRAM (GB)">
+                <input type="number" name="tdp_gpu" placeholder="TDP (Watts)">
+            </div>
+        </div>
+
+        <div id="campos_memorias" class="secao-especifica">
+            <span class="badge">Especificações de RAM</span>
+            <div class="grid">
+                <select name="tipo_ram">
+                    <option value="DDR4">DDR4</option>
+                    <option value="DDR5">DDR5</option>
+                    <option value="DDR3">DDR3</option>
+                </select>
+                <input type="number" name="capacidade_ram" placeholder="Capacidade (GB)">
+                <input type="number" name="velocidade_ram" placeholder="Velocidade (MHz)">
+            </div>
+        </div>
+
+        <div id="campos_armazenamentos" class="secao-especifica">
+            <span class="badge">Especificações de Disco</span>
+            <div class="grid">
+                <select name="tipo_disco">
+                    <option value="SSD NVMe">SSD NVMe</option>
+                    <option value="SSD SATA">SSD SATA</option>
+                    <option value="HDD">HDD</option>
+                </select>
+                <input type="number" name="capacidade_disco" placeholder="Capacidade (GB)">
+                <input type="number" name="velocidade_disco" placeholder="Leitura (MB/s)">
+            </div>
+        </div>
+
+        <div id="campos_refrigeracao" class="secao-especifica">
+            <span class="badge">Especificações de Cooler</span>
+            <div class="grid">
+                <select name="tipo_cooler">
+                    <option value="AirCooler">AirCooler</option>
+                    <option value="WaterCooler">WaterCooler</option>
+                </select>
+                <input type="number" name="tdp_cooler" placeholder="TDP Suportado">
+                <input type="number" name="altura_cooler" placeholder="Altura (mm)">
+                <input type="number" name="wc_fans" placeholder="Tam. Fans (Ex: 120, 240, 360)">
+            </div>
+        </div>
+
+        <div id="campos_fontes" class="secao-especifica">
+            <span class="badge">Especificações de Energia</span>
+            <div class="grid">
+                <input type="number" name="watts" placeholder="Potência (Watts)">
+                <select name="certificacao">
+                    <option value="80+ Bronze">80+ Bronze</option>
+                    <option value="80+ Silver">80+ Silver</option>
+                    <option value="80+ Gold">80+ Gold</option>
+                    <option value="80+ Platinum">80+ Platinum</option>
+                    <option value="80+ White">80+ White</option>
+                </select>
+                <select name="modular">
+                    <option value="Não">Não (Fixo)</option>
+                    <option value="Semi">Semi-Modular</option>
+                    <option value="Full">Full Modular</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="campos_gabinetes" class="secao-especifica">
+            <span class="badge">Especificações de Case</span>
+            <div class="grid">
+                <input type="text" name="tipo_gabinete" placeholder="Tipo (Mid Tower)">
+                <select name="mobo_suporte">
+                    <option value="ATX">ATX</option>
+                    <option value="mATX">mATX</option>
+                    <option value="ITX">ITX</option>
+                    <option value="E-ATX">E-ATX</option>
+                </select>
+                <input type="number" name="max_gpu" placeholder="Max GPU (mm)">
+                <input type="number" name="max_wc" placeholder="Max WC (mm)">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Preço Sugerido (R$):</label>
+            <input type="number" step="0.01" name="preco" required>
+        </div>
+
+        <button type="submit">Gravar no Banco de Dados</button>
+    </form>
+</div>
+
+<script>
+function mostrarCampos() {
+    document.querySelectorAll('.secao-especifica').forEach(div => {
+        div.style.display = 'none';
+    });
+    const selecionado = document.getElementById('categoria').value;
+    if (selecionado) {
+        document.getElementById('campos_' + selecionado).style.display = 'block';
+    }
+}
+</script>
+
+</body>
+</html>

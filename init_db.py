@@ -110,6 +110,15 @@ CREATE TABLE IF NOT EXISTS gabinetes (
     preco               REAL
 );
 
+-- Usuarios
+CREATE TABLE IF NOT EXISTS usuarios (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome        TEXT NOT NULL,
+    email       TEXT UNIQUE NOT NULL,
+    senha       TEXT NOT NULL,
+    is_admin    INTEGER DEFAULT 0
+);
+
 
 -- Relatórios Gerados (RF004)
 CREATE TABLE IF NOT EXISTS relatorios (
@@ -278,6 +287,12 @@ def criar_banco():
             GABINETES
         )
         print(f'  ✔ {len(GABINETES)} gabinetes inseridos.')
+
+    cur.execute('INSERT INTO usuarios VALUES (?,?,?,?,?)',
+                (None,'Carlos','carlos123@gmail.com','carlos123',1))
+    
+    cur.execute('INSERT INTO usuarios VALUES (?,?,?,?,?)',
+        (None,'Joao','joao123@gmail.com','joao123',1))
     
 
     conn.commit()
