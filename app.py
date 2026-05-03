@@ -15,9 +15,9 @@ app.secret_key = 'adm123'
 
 DB_PATH = 'pc_builder.db'
 
-# ----------
+# ---------------------------
 # CONEXÃO COM BANCO DE DADOS
-# ----------
+# ---------------------------
 
 def get_db():
     """Retorna conexão com o banco SQLite."""
@@ -31,8 +31,19 @@ def get_db():
 # ----------
 
 @app.route('/')
-def index():
+def landing():
     """Página principal."""
+    if 'user_id' in session:
+        return render_template('index.html')
+    else:
+        return render_template('landing.html')
+
+@app.route('/builder')
+def index():
+    """Página principal do PC Builder (antiga index)."""
+    # Protege a rota: só entra se estiver logado
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
     return render_template('index.html')
 
 
@@ -63,6 +74,29 @@ def get_componentes(tipo):
     conn.close()
     return jsonify([dict(r) for r in rows])
 
+
+@app.route('/cadastro_usuario', methods=['GET', 'POST'])
+def cadastro_usuario():
+    """Rota para cadastrar novos usuários comuns."""
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        email = request.form.get('email')
+        senha = request.form.get('senha')
+        
+        con = get_db()
+        try:
+            # is_admin por padrão é 0 (usuário comum)
+            con.execute('INSERT INTO usuarios (nome, email, senha, is_admin) VALUES (?, ?, ?, 0)', 
+                        (nome, email, senha))
+            con.commit()
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            return "E-mail já cadastrado!", 400
+        finally:
+            con.close()
+            
+    return render_template('cadastro_usuario.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     req = request.form
@@ -84,14 +118,16 @@ def login():
             session['user_name'] = user['nome']
             session['is_admin'] = bool(user['is_admin'])
 
-            if session['is_admin']:
-                return redirect(url_for('cadastrar'))
-            else:
-                return redirect(url_for('index'))
+            return redirect(url_for('index'))
+        
         return "E-mail ou senha incorretos!", 401
     return render_template('login.html')
 
-
+@app.route('/logout', methods=['POST'])
+def logout():
+    """Limpa a sessão e desloga o usuário."""
+    session.clear()
+    return redirect(url_for('landing'))
 
 # -- Cadastro de peças ----------------
 @app.route('/cadastro_peca', methods = ['POST', 'GET'])
@@ -119,31 +155,35 @@ def cadastrar():
             socket = req.get('socket')
             nucleos = req.get('nucleos')
             threads = req.get('threads')
-            freq_base = req.get('freq_base'),
+            freq_base = req.get('freq_base')
             freq_boost = req.get('freq_boost')
             pcie_versao = req.get('pcie_versao')
-            td_watts = req.get('td_watts')
+            tdp_watts = req.get('tdp_watts')
 
             cur.execute('INSERT INTO processadores VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-                    (None,nome,marca,socket,nucleos,threads,freq_base,freq_boost,pcie_versao,td_watts,preco))
+                    (None,nome,marca,socket,nucleos,threads,freq_base,freq_boost,pcie_versao,tdp_watts,preco))
             
             
         elif categoria == 'placas_mae':
             socket_mae = req.get('socket_mae')
             chipset = req.get('chipset')
+            pciemb_versao = req.get('pciemb_versao')
             ddr_suporte = req.get('ddr_suporte')
+            form_factor = req.get('form_factor')
 
-            cur.execute('INSERT INTO placas_mae VALUES (?,?,?,?,?,?,?)',
-                        (None,nome,marca,socket_mae,chipset,ddr_suporte,preco))
+            cur.execute('INSERT INTO placas_mae VALUES (?,?,?,?,?,?,?,?,?)',
+                        (None,nome,marca,socket_mae,chipset,pciemb_versao,ddr_suporte,form_factor,preco))
             
         
         elif categoria == 'gpus':
             chip = req.get('chip')
+            pciegpu_versao = req.get('pciegpu_versao')
             vram_gb = req.get('vram_gb')
             tdp_gpu = req.get('tdp_gpu')
+            
 
-            cur.execute('INSERT INTO gpus VALUES (?,?,?,?,?,?,?)',
-                        (None,nome,marca,chip,vram_gb,tdp_gpu,preco))
+            cur.execute('INSERT INTO gpus VALUES (?,?,?,?,?,?,?,?)',
+                        (None,nome,marca,chip,pciegpu_versao,vram_gb,tdp_gpu,preco))
             
             
         elif categoria == 'memorias':
@@ -186,16 +226,17 @@ def cadastrar():
         elif categoria == 'gabinetes':
             tipo_gabinete = req.get('tipo_gabinete')
             mobo_suporte = req.get('mobo_suporte')
+            max_cooler = req.get('max_cooler')
             max_gpu = req.get('max_gpu')
             max_wc = req.get('max_wc')
 
-            cur.execute('INSERT INTO gabinetes VALUES (?,?,?,?,?,?,?,?)',
-                        (None,nome,marca,tipo_gabinete,mobo_suporte,max_gpu,max_wc,preco))
+            cur.execute('INSERT INTO gabinetes VALUES (?,?,?,?,?,?,?,?,?)',
+                        (None,nome,marca,tipo_gabinete,mobo_suporte,max_cooler,max_gpu,max_wc,preco))
         con.commit()    
         con.close()
 
         return redirect(url_for('cadastrar'))
-    return render_template('cadastro_peca.html')
+    return render_template('index.html')
 
 # APi: ANALISAR COMPATIBILIDADE
 

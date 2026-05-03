@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<div class="hero-section">
+    <h1>Descubra se o seu próximo PC é compatível</h1>
+    <p>O PC Builder ajuda você a escolher as melhores peças, detectando gargalos de performance e problemas físicos antes de você comprar.</p>
+    
+    <div class="hero-buttons">
+        <a href="{{ url_for('cadastro_usuario') }}" class="btn-primary">Começar Agora</a>
+        <a href="{{ url_for('login') }}" class="btn-secondary">Já tenho uma conta</a>
+    </div>
+</div>
+{% endblock %}
