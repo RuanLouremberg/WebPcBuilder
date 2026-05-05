@@ -5,7 +5,14 @@ Execute uma vez antes de iniciar o servidor: python init_db.py
 
 import sqlite3
 import json
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
+
+nome_env = os.getenv('ADMIN_NOME')
+email_env = os.getenv('ADMIN_EMAIL')
+senha_env = os.getenv('ADMIN_SENHA')
 DB_PATH = 'pc_builder.db'
 
 # SCHEMA
@@ -163,7 +170,7 @@ GPUS = [
     # (nome, marca, chip, pcie_versao, vram_gb, tdp_watts, preco)
     ('NVIDIA GTX 1660 Super',   'ASUS',    'TU116',  3, 6,  125, 1200.0),
     ('NVIDIA RTX 3060',         'MSI',     'GA106',  4, 12, 170, 1800.0),
-    ('NVIDIA RTX 3070',         'EVGA',    'GA104',  4, 220, 220, 2800.0),
+    ('NVIDIA RTX 3070',         'EVGA',    'GA104',  4, 10, 220, 2800.0),
     ('NVIDIA RTX 3080',         'Gigabyte','GA102',  4, 10, 320, 3800.0),
     ('NVIDIA RTX 4060',         'Zotac',   'AD107',  4, 8,  115, 2200.0),
     ('NVIDIA RTX 4070',         'ASUS',    'AD104',  4, 12, 200, 3600.0),
@@ -289,10 +296,10 @@ def criar_banco():
         print(f'  ✔ {len(GABINETES)} gabinetes inseridos.')
 
     cur.execute('INSERT INTO usuarios VALUES (?,?,?,?,?)',
-                (None,'Carlos','carlos123@gmail.com','carlos123',1))
+                (None,nome_env,email_env,senha_env,1))
     
     cur.execute('INSERT INTO usuarios VALUES (?,?,?,?,?)',
-        (None,'Joao','joao123@gmail.com','joao123',1))
+        (None,'Joao','joao123@gmail.com','joao123',0))
     
 
     conn.commit()

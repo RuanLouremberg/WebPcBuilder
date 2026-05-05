@@ -20,7 +20,7 @@
                 <a href="{{ url_for('logout') }}" class="btn-logout">Sair ({{ session.get('user_name') }})</a>
             {% else %}
                 <a href="{{ url_for('login') }}">Login</a>
-                <a href="{{ url_for('cadastro_usuario') }}" class="btn-primary">Cadastre-se</a>
+                <a href="{{ url_for('cadastro_usuario') }}" class="btn-primary" >Cadastre-se</a>
             {% endif %}
         </nav>
     </header>
