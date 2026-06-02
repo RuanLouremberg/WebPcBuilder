@@ -10,14 +10,21 @@ com foco em gargalos de barramento PCIe e comunicação clara ao usuário final.
 
 ```
 pc_builder/
+├── .env
 ├── app.py              # Backend Flask (rotas e lógica de análise)
 ├── init_db.py          # Inicialização do banco SQLite com dados
 ├── requirements.txt    # Dependência: Flask
 ├── pc_builder.db       # Banco SQLite (gerado automaticamente)
 ├── templates/
-│   └── index.html      # Frontend HTML + JavaScript
+│  └── base.html        # Frontend HTML + JavaScript
+│  └── cadastro_peca.html
+│  └── cadastro_usuario.html
+│  └── index.html
+│  └── landing.html
+│  └── login.html
 └── static/
-    └── style.css       # Estilização CSS
+    └── style.css
+    └── style2.css       # Estilização CSS
 ```
 
 ---
@@ -86,6 +93,8 @@ placas_mae     (id, nome, marca, socket, chipset, pcie_versao, ddr_suporte, form
 gpus           (id, nome, marca, chip, pcie_versao, vram_gb, tdp_watts, preco)
 memorias       (id, nome, marca, tipo, capacidade, velocidade, preco)
 armazenamentos (id, nome, marca, tipo, capacidade, velocidade, preco)
+refrigeracao   (id,nome, marca, tipo, tdp, altura, wc_fans, preco)
 fontes         (id, nome, marca, watts, certificacao, modular, preco)
+gabinetes      (id,nome, marca, tipo, mobo_form_factor, max_cooler, max_gpu, max_wc preco)
 relatorios     (id, dados_json, criado_em)
 ```

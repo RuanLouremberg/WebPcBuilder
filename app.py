@@ -91,7 +91,7 @@ def cadastro_usuario():
             con.commit()
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
-            return "E-mail já cadastrado!", 400
+            return render_template('cadastro_usuario.html', erro='Email já cadastrado!')
         finally:
             con.close()
             
@@ -101,7 +101,6 @@ def cadastro_usuario():
 def login():
     req = request.form
     if request.method == 'POST':
-        nome = req.get('nome')
         email = req.get('email')
         senha = req.get('senha')
         
@@ -120,7 +119,7 @@ def login():
 
             return redirect(url_for('index'))
         
-        return "E-mail ou senha incorretos!", 401
+        return render_template('login.html', erro="E-mail ou senha incorretos!"), 401
     return render_template('login.html')
 
 @app.route('/logout', methods=['POST'])

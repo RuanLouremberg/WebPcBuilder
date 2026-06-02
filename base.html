@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Builder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <a href="{{ url_for('landing') }}">💻 PC Builder</a>
+        </div>
+        <nav class="nav-links">
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('index') }}">Montar Setup</a>
+                
+                
+                
+                <a href="{{ url_for('logout') }}" class="btn-logout">Sair ({{ session.get('user_name') }})</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('cadastro_usuario') }}" class="btn-primary" >Cadastre-se</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PC Builder – Analisador de Compatibilidade</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <!-- Ícones simples via Unicode / CSS (sem dependência externa) -->
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ HEADER ═══════ -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">🖥️</span>
+      <div>
+        <span class="logo-title">PC Builder</span>
+        <span class="logo-sub">Analisador de Compatibilidade</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" onclick="mostrarAba('montar')">Montar Setup</button>
+      <button class="nav-btn"        onclick="mostrarAba('historico')">Histórico</button>
+      {% if session.get('is_admin') %}
+      <button class="nav-btn" id="abacadastro" onclick="mostrarAba('cadastrarpeca')">Cadastrar Peças</button>
+                {% endif %}
+      <form action="/logout" method="POST">
+        <button class="nav-btnlogout" type="submit">Logout</button>
+      </form>
+      
+    </nav>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════ MAIN ═══════════ -->
+<main class="container">
+
+  <!-- ──────────────────── ABA: MONTAR ──────────────── -->
+  <section id="aba-montar">
+
+    <div class="page-title">
+      <h1>Monte seu Setup</h1>
+      <p>Selecione os componentes e receba uma análise completa de compatibilidade e desempenho.</p>
+    </div>
+
+    <div class="builder-grid">
+
+      <!-- Coluna esquerda: seletores de componentes -->
+      <div class="components-panel">
+        <h2 class="panel-title">Componentes</h2>
+
+        <!-- Processador -->
+        <div class="component-card" id="card-processador">
+          <div class="component-header">
+            <span class="comp-icon">⚙️</span>
+            <div>
+              <span class="comp-label">Processador (CPU)</span>
+              <span class="comp-req">Obrigatório</span>
+            </div>
+          </div>
+          <select id="sel-processador" onchange="selecionarComponente('processador', this)">
+            <option value="">— Selecione o processador —</option>
+          </select>
+          <div class="comp-specs" id="specs-processador"></div>
+        </div>
+
+        <!-- Placa-Mãe -->
+        <div class="component-card" id="card-placa_mae">
+          <div class="component-header">
+            <span class="comp-icon">🔧</span>
+            <div>
+              <span class="comp-label">Placa-Mãe</span>
+              <span class="comp-req">Obrigatório</span>
+            </div>
+          </div>
+          <select id="sel-placa_mae" onchange="selecionarComponente('placa_mae', this)">
+            <option value="">— Selecione a placa-mãe —</option>
+          </select>
+          <div class="comp-specs" id="specs-placa_mae"></div>
+        </div>
+
+        <!-- GPU -->
+        <div class="component-card" id="card-gpu">
+          <div class="component-header">
+            <span class="comp-icon">🎮</span>
+            <div>
+              <span class="comp-label">Placa de Vídeo (GPU)</span>
+              <span class="comp-req">Obrigatório</span>
+            </div>
+          </div>
+          <select id="sel-gpu" onchange="selecionarComponente('gpu', this)">
+            <option value="">— Selecione a GPU —</option>
+          </select>
+          <div class="comp-specs" id="specs-gpu"></div>
+        </div>
+
+        <!-- Memória -->
+        <div class="component-card" id="card-memoria">
+          <div class="component-header">
+            <span class="comp-icon">💾</span>
+            <div>
+              <span class="comp-label">Memória RAM</span>
+              <span class="comp-opt">Opcional</span>
+            </div>
+          </div>
+          <select id="sel-memoria" onchange="selecionarComponente('memoria', this)">
+            <option value="">— Selecione a memória —</option>
+          </select>
+          <div class="comp-specs" id="specs-memoria"></div>
+        </div>
+
+        <!-- Armazenamento -->
+        <div class="component-card" id="card-armazenamento">
+          <div class="component-header">
+            <span class="comp-icon">📀</span>
+            <div>
+              <span class="comp-label">Armazenamento</span>
+              <span class="comp-opt">Opcional</span>
+            </div>
+          </div>
+          <select id="sel-armazenamento" onchange="selecionarComponente('armazenamento', this)">
+            <option value="">— Selecione o armazenamento —</option>
+          </select>
+          <div class="comp-specs" id="specs-armazenamento"></div>
+        </div>
+        
+        <!-- Refrigeração -->
+        <div class="component-card" id="card-refrigeracao">
+          <div class="component-header">
+            <span class="comp-icon">❄️</span>
+            <div>
+              <span class="comp-label">Refrigeração</span>
+              <span class="comp-opt">Opcional</span>
+            </div>
+          </div>
+          <select id="sel-refrigeracao" onchange="selecionarComponente('refrigeracao', this)">
+            <option value="">— Selecione a Refrigeração —</option>
+          </select>
+          <div class="comp-specs" id="specs-refrigeracao"></div>
+        </div>
+
+        <!-- Fonte -->
+        <div class="component-card" id="card-fonte">
+          <div class="component-header">
+            <span class="comp-icon">🔌</span>
+            <div>
+              <span class="comp-label">Fonte de Alimentação</span>
+              <span class="comp-opt">Opcional</span>
+            </div>
+          </div>
+          <select id="sel-fonte" onchange="selecionarComponente('fonte', this)">
+            <option value="">— Selecione a fonte —</option>
+          </select>
+          <div class="comp-specs" id="specs-fonte"></div>
+        </div>
+
+        <!-- Gabinetes -->
+        <div class="component-card" id="card-gabinete">
+          <div class="component-header">
+            <span class="comp-icon">🖥️</span>
+            <div>
+              <span class="comp-label">Gabinete</span>
+              <span class="comp-opt">Opcional</span>
+            </div>
+          </div>
+          <select id="sel-gabinete" onchange="selecionarComponente('gabinete', this)">
+            <option value="">— Selecione o Gabinete —</option>
+          </select>
+          <div class="comp-specs" id="specs-gabinete"></div>
+        </div>
+
+        <button class="btn-analisar" id="btn-analisar" onclick="analisar()">
+          🔍 Analisar Compatibilidade
+        </button>
+
+      </div><!-- /components-panel -->
+
+      <!-- Coluna direita: resultado da análise -->
+      <div class="result-panel" id="result-panel">
+
+        <!-- Estado inicial -->
+        <div class="result-placeholder" id="result-placeholder">
+          <div class="placeholder-icon">🔍</div>
+          <p>Selecione ao menos CPU, Placa-mãe e GPU<br>e clique em <strong>Analisar</strong>.</p>
+        </div>
+
+        <!-- Loading -->
+        <div class="result-loading" id="result-loading" style="display:none">
+          <div class="spinner"></div>
+          <p>Analisando compatibilidade…</p>
+        </div>
+
+        <!-- Resultado -->
+        <div id="result-content" style="display:none">
+
+          <!-- Score -->
+          <div class="score-card">
+            <div class="score-circle-wrap">
+              <svg class="score-ring" viewBox="0 0 120 120">
+                <circle class="ring-bg"   cx="60" cy="60" r="50"/>
+                <circle class="ring-fill" cx="60" cy="60" r="50" id="ring-fill"/>
+              </svg>
+              <div class="score-number" id="score-number">--</div>
+            </div>
+            <div class="score-info">
+              <h3 id="score-titulo">Analisando…</h3>
+              <p  id="score-desc"></p>
+              <div class="consumo-badge" id="consumo-badge"></div>
+            </div>
+          </div>
+
+          <!-- Alertas -->
+          <div id="alertas-section">
+            <h3 class="section-title">⚠️ Alertas de Compatibilidade</h3>
+            <div id="alertas-list"></div>
+          </div>
+
+          <!-- Recomendações -->
+          <div id="recs-section">
+            <h3 class="section-title">💡 Recomendações</h3>
+            <ul id="recs-list" class="recs-list"></ul>
+          </div>
+
+          <!-- Resumo dos componentes -->
+          <div id="resumo-section">
+            <h3 class="section-title">📋 Resumo do Setup</h3>
+            <div id="resumo-tabela"></div>
+          </div>
+
+          <!-- Aviso de ciência (RN003) -->
+          <div class="ciencia-box" id="ciencia-box" style="display:none">
+            <label>
+              <input type="checkbox" id="check-ciencia" onchange="atualizarCiencia()" />
+              <span>Estou ciente das limitações de desempenho detectadas e desejo prosseguir com esta configuração.</span>
+            </label>
+            <button class="btn-finalizar" id="btn-finalizar" disabled onclick="finalizar()">
+              ✅ Finalizar Configuração
+            </button>
+          </div>
+
+        </div><!-- /result-content -->
+
+      </div><!-- /result-panel -->
+
+    </div><!-- /builder-grid -->
+
+  </section>
+
+  <!-- ──────────────────── ABA: HISTÓRICO ──────────────── -->
+  <section id="aba-historico" style="display:none">
+    <div class="page-title">
+      <h1>Histórico de Análises</h1>
+      <p>Últimos relatórios gerados pelo sistema.</p>
+    </div>
+    <div id="historico-lista">
+      <p class="loading-text">Carregando…</p>
+    </div>
+  </section>
+
+  <!-- ──────────────────── ABA: CADASTRAR PEÇA ──────────────── -->
+   <section id="aba-cadastrarpeca" style="display: none">
+    <div class="page-title">
+      <h1>Cadastrar Peças</h1>
+      
+      
+    </div>
+    
+</head>
+<body class="cadastropc">
+
+
+<div class="containercad">
+    <form action="/cadastro_peca" method="POST">
+        
+        <div class="form-group">
+            <label>Tipo de Peça:</label>
+            <select name="categoria" id="categoria" class='categoriacad'onchange="mostrarCampos()" required>
+                <option value="">Selecione o que deseja cadastrar...</option>
+                <option value="processadores">Processador</option>
+                <option value="placas_mae">Placa-mãe</option>
+                <option value="gpus">Placa de Vídeo (GPU)</option>
+                <option value="memorias">Memória RAM</option>
+                <option value="armazenamentos">Armazenamento (SSD/HDD)</option>
+                <option value="refrigeracao">Refrigeração (Air/Water)</option>
+                <option value="fontes">Fonte de Alimentação</option>
+                <option value="gabinetes">Gabinete</option>
+            </select>
+        </div>
+
+        <div class="grid">
+            <div class="form-group">
+                <label>Nome do Produto:</label>
+                <input type="text" name="nome" id="campo_nome" placeholder="Ex: RTX 4070" required>
+            </div>
+            <div class="form-group">
+                <label>Marca:</label>
+                <input class="inputcad" type="text" name="marca" id="campo_marca" placeholder="Ex: ASUS" required>
+            </div>
+        </div>
+
+        <div id="campos_processadores" class="secao-especifica">
+            <span class="badge">Especificações de CPU</span>
+            <div class="grid">
+                <input type="text" name="socket" placeholder="Socket (Ex: AM5)">
+                <input type="number" name="nucleos" placeholder="Núcleos">
+                <input type="number" name="threads" placeholder="Threads">
+                <input type="number" step="0.1" name="freq_base" placeholder="Frequência Base (GHz)">
+                <input type="number" step="0.1" name="freq_boost" placeholder="Frequência Boost (GHz)">
+                <select name="pcie_versao">
+                    <option value="">PCIe Versão</option>
+                    <option value="3.0">3.0</option>
+                    <option value="4.0">4.0</option>
+                    <option value="5.0">5.0</option>
+                </select>
+                <input type="number" name="tdp_watts" placeholder="TDP (Watts)">
+            </div>
+        </div>
+
+        <div id="campos_placas_mae" class="secao-especifica">
+            <span class="badge">Especificações de Mobo</span>
+            <div class="grid">
+                <input type="text" name="socket_mae" placeholder="Socket">
+                <input type="text" name="chipset" placeholder="Chipset">
+                <select name="pciemb_versao">
+                    <option value="">Versão PCie</option>
+                    <option value="3.0">3.0</option>
+                    <option value="4.0">4.0</option>
+                    <option value="5.0">5.0</option>
+                </select>
+                <select name="ddr_suporte">
+                    <option value="">Suporte DDR</option>
+                    <option value="DDR3"></option>
+                    <option value="DDR4">DDR4</option>
+                    <option value="DDR5">DDR5</option>
+                </select>
+                <select name="form_factor">
+                    <option value="">Forma Placa-Mãe</option>
+                    <option value="ATX">ATX</option>
+                    <option value="mATX">mATX</option>
+                    <option value="ITX">ITX</option>
+                    <option value="E-ATX">E-ATX</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="campos_gpus" class="secao-especifica">
+            <span class="badge">Especificações de Vídeo</span>
+            <div class="grid">
+                <input type="text" name="chip" placeholder="Chip (Ex: Navi31)">
+                <select name="pciegpu_versao">
+                    <option value="">Versão PCie</option>
+                    <option value=3.0 >3.0</option>
+                    <option value=4.0 >4.0</option>
+                    <option value=5.0 >5.0</option>
+                </select>
+                <input type="number" name="vram_gb" placeholder="VRAM (GB)">
+                <input type="number" name="tdp_gpu" placeholder="TDP (Watts)">
+            </div>
+        </div>
+
+        <div id="campos_memorias" class="secao-especifica">
+            <span class="badge">Especificações de RAM</span>
+            <div class="grid">
+                <select name="tipo_ram">
+                    <option value="">Tipo Ram</option>
+                    <option value="DDR4">DDR4</option>
+                    <option value="DDR5">DDR5</option>
+                    <option value="DDR3">DDR3</option>
+                </select>
+                <input type="number" name="capacidade_ram" placeholder="Capacidade (GB)">
+                <input type="number" name="velocidade_ram" placeholder="Velocidade (MHz)">
+            </div>
+        </div>
+
+        <div id="campos_armazenamentos" class="secao-especifica">
+            <span class="badge">Especificações de Disco</span>
+            <div class="grid">
+                <select name="tipo_disco">
+                    <option value="SSD NVME">SSD NVME</option>
+                    <option value="SSD SATA">SSD SATA</option>
+                    <option value="HDD">HDD</option>
+                </select>
+                <input type="number" name="capacidade_disco" placeholder="Capacidade (GB)">
+                <input type="number" name="velocidade_disco" placeholder="Leitura (MB/s)">
+            </div>
+        </div>
+
+        <div id="campos_refrigeracao" class="secao-especifica">
+            <span class="badge">Especificações de Cooler</span>
+            <div class="grid">
+                <select name="tipo_cooler">
+                    <option value="AirCooler">AirCooler</option>
+                    <option value="WaterCooler">WaterCooler</option>
+                </select>
+                <input type="number" name="tdp_cooler" placeholder="TDP Suportado">
+                <input type="number" name="altura_cooler" placeholder="Altura (mm)">
+                <input type="number" name="wc_fans" placeholder="Tam. Fans (Ex: 120, 240, 360)">
+            </div>
+        </div>
+
+        <div id="campos_fontes" class="secao-especifica">
+            <span class="badge">Especificações de Energia</span>
+            <div class="grid">
+                <input type="number" name="watts" placeholder="Potência (Watts)">
+                <select name="certificacao">
+                    <option value="Generica">Genérica</option>
+                    <option value="80+ Bronze">80+ Bronze</option>
+                    <option value="80+ Silver">80+ Silver</option>
+                    <option value="80+ Gold">80+ Gold</option>
+                    <option value="80+ Platinum">80+ Platinum</option>
+                    <option value="80+ Titanium">80+ Titanium</option>
+                    <option value="80+ White">80+ White</option>
+                </select>
+                <select name="modular">
+                    <option value="Não">Não (Fixo)</option>
+                    <option value="Semi">Semi-Modular</option>
+                    <option value="Full">Full Modular</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="campos_gabinetes" class="secao-especifica">
+            <span class="badge">Especificações de Case</span>
+            <div class="grid">
+                <input type="text" name="tipo_gabinete" placeholder="Tipo (Mid Tower)">
+                <select name="mobo_suporte">
+                    <option value="ATX">ATX</option>
+                    <option value="mATX">mATX</option>
+                    <option value="ITX">ITX</option>
+                    <option value="E-ATX">E-ATX</option>
+                </select>
+                <input type="number" name="max_cooler" placeholder="Max Cooler (mm)">
+                <input type="number" name="max_gpu" placeholder="Max GPU (mm)">
+                <input type="number" name="max_wc" placeholder="Max WC (mm)">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Preço Sugerido (R$):</label>
+            <input type="number" step="0.01" name="preco" id="campo_preco" required>
+        </div>
+
+        <button type="submit" id="botao_gravar" >Gravar no Banco de Dados</button>
+    </form>
+</div>
+
+<script>
+function mostrarCampos() {
+    document.querySelectorAll('.secao-especifica').forEach(div => {
+        div.style.display = 'none';
+    });
+    const selecionado = document.getElementById('categoria').value;
+    if (selecionado) {
+        document.getElementById('campos_' + selecionado).style.display = 'block';
+    }
+}
+</script>
+   </section>
+
+</main>
+
+<!-- ═══════════════════════════════════════ FOOTER ════════ -->
+<footer class="footer">
+  <p>PC Builder · Laboratório de Software · 2025</p>
+</footer>
+
+<!-- ═══════════════════════════════════════ SCRIPTS ══════ -->
+<script>
+/* ─────────────────────────────────────────────────────────
+   ESTADO GLOBAL
+──────────────────────────────────────────────────────────── */
+const selecionados = {};      // { tipo: { id, ...dadosCompletos } }
+let ultimoRelatorio = null;   // último resultado da análise
+
+/* ─────────────────────────────────────────────────────────
+   INICIALIZAÇÃO
+──────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  const tipos = ['processador','placa_mae','gpu','memoria','armazenamento','refrigeracao','fonte','gabinete'];
+  tipos.forEach(t => carregarComponentes(t));
+});
+
+/* ─────────────────────────────────────────────────────────
+   CARREGAR COMPONENTES DA API
+──────────────────────────────────────────────────────────── */
+async function carregarComponentes(tipo) {
+  try {
+    const res  = await fetch(`/api/componentes/${tipo}`);
+    const list = await res.json();
+    const sel  = document.getElementById(`sel-${tipo}`);
+
+    list.forEach(c => {
+      const opt       = document.createElement('option');
+      opt.value       = c.id;
+      opt.textContent = c.nome + (c.preco ? ` — R$ ${c.preco.toFixed(2)}` : '');
+      opt.dataset.obj = JSON.stringify(c);
+      sel.appendChild(opt);
+    });
+  } catch (e) {
+    console.error(`Erro ao carregar ${tipo}:`, e);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   SELECIONAR COMPONENTE
+──────────────────────────────────────────────────────────── */
+function selecionarComponente(tipo, sel) {
+  const opt  = sel.options[sel.selectedIndex];
+  const card = document.getElementById(`card-${tipo}`);
+  const specs = document.getElementById(`specs-${tipo}`);
+
+  if (!opt.value) {
+    delete selecionados[tipo];
+    card.classList.remove('selected');
+    specs.innerHTML = '';
+    return;
+  }
+
+  const obj = JSON.parse(opt.dataset.obj);
+  selecionados[tipo] = obj;
+  card.classList.add('selected');
+  specs.innerHTML = renderSpecs(tipo, obj);
+}
+
+/* ─────────────────────────────────────────────────────────
+   RENDERIZAR SPECS DO COMPONENTE
+──────────────────────────────────────────────────────────── */
+function renderSpecs(tipo, c) {
+  const tags = {
+    processador:   [['Socket', c.socket], ['Núcleos/Threads', `${c.nucleos}C/${c.threads}T`],
+                    ['PCIe', `${c.pcie_versao}.0`], ['TDP', `${c.tdp_watts}W`]],
+    placa_mae:     [['Socket', c.socket], ['Chipset', c.chipset],
+                    ['PCIe', `${c.pcie_versao}.0`], ['DDR', c.ddr_suporte]],
+    gpu:           [['VRAM', `${c.vram_gb} GB`], ['PCIe', `${c.pcie_versao}.0`],
+                    ['TDP', `${c.tdp_watts}W`], ['Chip', c.chip]],
+    memoria:       [['Tipo', c.tipo], ['Capacidade', `${c.capacidade} GB`], ['Velocidade', `${c.velocidade} MHz`]],
+    armazenamento: [['Tipo', c.tipo], ['Capacidade', `${c.capacidade} GB`], ['Velocidade', `${c.velocidade} MB/s`]],
+    refrigeracao:  [['Tipo', c.tipo], ['TDP', `${c.tdp}W`], ['Altura Torre', `${c.altura}mm` ],
+                    ['Fan', `${c.wc_fans}mm`]],
+    fonte:         [['Potência', `${c.watts}W`], ['Certificação', c.certificacao], ['Modular', c.modular]],
+    gabinete:      [['Tipo', c.tipo],['Máx Torre', `${c.max_cooler}mm`],['Máx GPU', `${c.max_gpu}mm`],['Máx WC', `${c.max_wc}mm`]] /// CONTINUAR ESSA PARTE
+};
+  const items = tags[tipo] || [];
+
+  return '<div class="specs-row">' +
+    items.map(([k,v]) => `<span class="spec-tag"><b>${k}:</b> ${v}</span>`).join('') +
+  '</div>';
+}
+
+/* ─────────────────────────────────────────────────────────
+   ANALISAR COMPATIBILIDADE
+──────────────────────────────────────────────────────────── */
+async function analisar() {
+  if (!selecionados.processador || !selecionados.placa_mae || !selecionados.gpu) {
+    alert('⚠️ Selecione ao menos o Processador, a Placa-mãe e a GPU para analisar.');
+    return;
+  }
+
+  mostrarLoading(true);
+
+  const payload = {
+    processador_id:   selecionados.processador?.id   || null,
+    placa_mae_id:     selecionados.placa_mae?.id      || null,
+    gpu_id:           selecionados.gpu?.id            || null,
+    memoria_id:       selecionados.memoria?.id        || null,
+    armazenamento_id: selecionados.armazenamento?.id  || null,
+    refrigeracao_id:  selecionados.refrigeracao?.id   || null,
+    fonte_id:         selecionados.fonte?.id          || null,
+    gabinete_id:      selecionados.gabinete?.id       || null,
+  };
+
+  try {
+    const res  = await fetch('/api/analisar', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+    });
+    const data = await res.json();
+    ultimoRelatorio = data;
+    renderizarResultado(data);
+  } catch (e) {
+    alert('Erro ao comunicar com o servidor: ' + e.message);
+    mostrarLoading(false);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   RENDERIZAR RESULTADO
+──────────────────────────────────────────────────────────── */
+function renderizarResultado(data) {
+  mostrarLoading(false);
+
+  document.getElementById('result-placeholder').style.display = 'none';
+  document.getElementById('result-content').style.display     = 'block';
+
+  // ── Score ──────────────────────────────────────────────
+  const score = data.score_performance;
+  document.getElementById('score-number').textContent = score;
+
+  const ring    = document.getElementById('ring-fill');
+  const circum  = 2 * Math.PI * 50;          // r=50
+  const offset  = circum * (1 - score / 100);
+  ring.style.strokeDasharray  = circum;
+  ring.style.strokeDashoffset = offset;
+  ring.style.stroke = scoreCor(score);
+
+  let titulo, desc;
+  if (score >= 90)      { titulo = '✅ Excelente';     desc  = 'Setup equilibrado e sem gargalos.'; }
+  else if (score >= 70) { titulo = '🟡 Bom';           desc  = 'Compatível com pequenas restrições.'; }
+  else if (score >= 50) { titulo = '🟠 Regular';       desc  = 'Gargalos detectados. Veja os alertas.'; }
+  else                  { titulo = '🔴 Incompatível';  desc  = 'Problemas críticos identificados.'; }
+
+  document.getElementById('score-titulo').textContent = titulo;
+  document.getElementById('score-desc').textContent   = desc;
+  document.getElementById('consumo-badge').textContent =
+    `⚡ Consumo estimado: ~${data.consumo_estimado_w}W`;
+
+  // ── Alertas ────────────────────────────────────────────
+  const alertasList = document.getElementById('alertas-list');
+  alertasList.innerHTML = '';
+  if (data.alertas.length === 0) {
+    alertasList.innerHTML = '<div class="alerta ok"><span class="alerta-icon">✅</span><span>Nenhum problema detectado!</span></div>';
+  } else {
+    data.alertas.forEach(a => {
+      const div = document.createElement('div');
+      div.className = `alerta ${a.nivel}`;
+      div.innerHTML = `
+        <div class="alerta-header">
+          <span class="alerta-icon">${iconePorNivel(a.nivel)}</span>
+          <strong>${a.titulo}</strong>
+          ${a.perda_percentual ? `<span class="perda-badge">-${a.perda_percentual}% largura de banda</span>` : ''}
+        </div>
+        <p class="alerta-desc">${a.descricao}</p>
+      `;
+      alertasList.appendChild(div);
+    });
+  }
+
+  // ── Recomendações ──────────────────────────────────────
+  const recsList = document.getElementById('recs-list');
+  recsList.innerHTML = '';
+  data.recomendacoes.forEach(r => {
+    const li = document.createElement('li');
+    li.textContent = r;
+    recsList.appendChild(li);
+  });
+
+  // ── Resumo dos componentes ─────────────────────────────
+  const resumo = document.getElementById('resumo-tabela');
+  const comps  = data.componentes;
+  const linhas = [
+    ['⚙️ Processador',  comps.processador],
+    ['🔧 Placa-mãe',    comps.placa_mae],
+    ['🎮 GPU',          comps.gpu],
+    ['💾 Memória',      comps.memoria],
+    ['📀 Armazenamento',comps.armazenamento],
+    ['❄️ Refrigeração', comps.refrigeracao],
+    ['🔌 Fonte',        comps.fonte],
+    ['🖥️ Gabinete', comps.gabinete]
+  ];
+  resumo.innerHTML = '<table class="resumo-table"><tbody>' +
+    linhas.map(([label, c]) => c
+      ? `<tr><td class="rsum-label">${label}</td><td>${c.nome}</td><td class="rsum-preco">R$ ${(c.preco||0).toFixed(2)}</td></tr>`
+      : ''
+    ).join('') +
+  '</tbody></table>';
+
+  // ── Ciência do usuário (RN003) ─────────────────────────
+  const temAlerta = data.alertas.length > 0;
+  const cienciaBox = document.getElementById('ciencia-box');
+  cienciaBox.style.display = temAlerta ? 'block' : 'none';
+  if (!temAlerta) {
+    // sem alertas: mostrar botão de finalizar diretamente
+    document.getElementById('ciencia-box').style.display = 'none';
+  }
+  document.getElementById('check-ciencia').checked = false;
+  document.getElementById('btn-finalizar').disabled = true;
+}
+
+/* ─────────────────────────────────────────────────────────
+   AUXILIARES
+──────────────────────────────────────────────────────────── */
+function scoreCor(s) {
+  if (s >= 80) return '#22c55e';
+  if (s >= 60) return '#eab308';
+  if (s >= 40) return '#f97316';
+  return '#ef4444';
+}
+
+function iconePorNivel(nivel) {
+  return { critico: '🔴', aviso: '🟡', atencao: '🟠', ok: '✅' }[nivel] || '⚠️';
+}
+
+function mostrarLoading(show) {
+  document.getElementById('result-loading').style.display     = show ? 'flex' : 'none';
+  document.getElementById('result-placeholder').style.display = show ? 'none' : '';
+  if (show) {
+    document.getElementById('result-content').style.display = 'none';
+  }
+}
+
+function atualizarCiencia() {
+  const checked = document.getElementById('check-ciencia').checked;
+  document.getElementById('btn-finalizar').disabled = !checked;
+}
+
+function finalizar() {
+  alert('✅ Configuração finalizada!\n\nSetup registrado com sucesso.\n(ID do relatório: ' + ultimoRelatorio?.id + ')');
+}
+
+/* ─────────────────────────────────────────────────────────
+   ABAS DE NAVEGAÇÃO
+──────────────────────────────────────────────────────────── */
+function mostrarAba(aba) {
+  document.getElementById('aba-montar').style.display    = aba === 'montar'    ? '' : 'none';
+  document.getElementById('aba-historico').style.display = aba === 'historico' ? '' : 'none';
+  document.getElementById('aba-cadastrarpeca').style.display = aba === 'cadastrarpeca' ? '' : 'none';
+  document.querySelectorAll('.nav-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', (i === 0 && aba === 'montar') || (i === 1 && aba === 'historico') || (i === 1 && aba === 'cadastrarpeca'));
+  });
+
+  if (aba === 'historico') carregarHistorico();
+}
+
+/* ─────────────────────────────────────────────────────────
+   HISTÓRICO
+──────────────────────────────────────────────────────────── */
+async function carregarHistorico() {
+  const container = document.getElementById('historico-lista');
+  container.innerHTML = '<p class="loading-text">Carregando…</p>';
+  try {
+    const res  = await fetch('/api/relatorios');
+    const list = await res.json();
+    if (!list.length) {
+      container.innerHTML = '<p class="loading-text">Nenhuma análise realizada ainda.</p>';
+      return;
+    }
+    container.innerHTML = list.map(r => `
+      <div class="hist-card" onclick="verRelatorio(${r.id})">
+        <div class="hist-info">
+          <span class="hist-id">#${r.id}</span>
+          <span class="hist-data">${new Date(r.criado_em).toLocaleString('pt-BR')}</span>
+        </div>
+        <div class="hist-meta">
+          <span class="score-badge" style="background:${scoreCor(r.score)}">${r.score}/100</span>
+          <span class="alertas-badge ${r.total_alertas > 0 ? 'tem-alerta' : 'ok-badge'}">${r.total_alertas} alerta(s)</span>
+        </div>
+        <span class="hist-ver">Ver detalhes →</span>
+      </div>
+    `).join('');
+  } catch (e) {
+    container.innerHTML = '<p class="loading-text">Erro ao carregar histórico.</p>';
+  }
+}
+
+async function verRelatorio(id) {
+  try {
+    const res  = await fetch(`/api/relatorios/${id}`);
+    const data = await res.json();
+    ultimoRelatorio = data;
+    mostrarAba('montar');
+    // Exibe resultado sem precisar refazer a seleção
+    document.getElementById('result-placeholder').style.display = 'none';
+    renderizarResultado(data);
+    window.scrollTo(0, 0);
+  } catch (e) {
+    alert('Erro ao carregar relatório.');
+  }
+}
+</script>
+
+</body>
+</html>

@@ -298,9 +298,6 @@ def criar_banco():
     cur.execute('INSERT INTO usuarios VALUES (?,?,?,?,?)',
                 (None,nome_env,email_env,senha_env,1))
     
-    cur.execute('INSERT INTO usuarios VALUES (?,?,?,?,?)',
-        (None,'Joao','joao123@gmail.com','joao123',0))
-    
 
     conn.commit()
     conn.close()
