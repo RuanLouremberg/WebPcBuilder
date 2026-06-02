@@ -16,6 +16,9 @@
         </div>
         <button type="submit" class="btn-primary" id="botao_enviar">Entrar</button>
     </form>
+    {% if erro %}
+    <p style="color: red; font-weight: bold;">{{ erro }}</p>
+    {% endif %}
 
 </div>
 

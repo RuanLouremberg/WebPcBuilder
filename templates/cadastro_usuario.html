@@ -18,5 +18,8 @@
         </div>
         <button type="submit" class="btn-primary">Cadastrar</button>
     </form>
+    {% if erro %}
+    <p style="color: red; font-weight: bold;">{{ erro }}</p>
+    {% endif %}
 </div>
 {% endblock %}
